@@ -501,18 +501,19 @@
                                 </div>
                                 
                                 <!-- CAS 1: Coup à rembourser GAGNANT et TOUS les coups à gagner PERDANTS -->
-                                <!-- Dans ce cas, on a récupéré notre mise mais on n'a rien gagné -->
+                                <!-- Dans ce cas, le résultat est 0 et on demande si l'utilisateur veut rejouer -->
                                 <div v-if="isCoupRembourserGagnantEtTousCoupsGagnerPerdants() && !current.coup3.replayDecisionMade" class="alert alert-warning">
-                                    <h6><i class="fas fa-exclamation-triangle"></i> Mise remboursée - Aucun gain</h6>
+                                    <h6><i class="fas fa-exclamation-triangle"></i> Résultat : 0 €</h6>
                                     <p class="mb-2">Le coup à rembourser est <strong class="text-success">GAGNANT</strong>, mais tous les coups à gagner sont <strong class="text-danger">PERDANTS</strong>.</p>
-                                    <p class="mb-3">Votre mise a été remboursée, mais vous n'avez rien gagné. Voulez-vous rejouer le Coup 3 ?</p>
+                                    <p class="mb-2"><strong>Résultat actuel : 0 €</strong> (mise remboursée uniquement)</p>
+                                    <p class="mb-3">Voulez-vous rejouer le Coup 3 ?</p>
                                     
                                     <div class="d-flex gap-3 flex-wrap">
-                                        <button @click="replayCoup3" class="btn btn-success btn-lg">
+                                        <button @click="replayCoup3WithoutHistory" class="btn btn-success btn-lg">
                                             <i class="fas fa-redo me-2"></i> Oui, rejouer le Coup 3
                                         </button>
-                                        <button @click="finishWithRemboursementOnly" class="btn btn-secondary btn-lg">
-                                            <i class="fas fa-stop me-2"></i> Non, terminer avec le remboursement
+                                        <button @click="finishWithRemboursementGain" class="btn btn-secondary btn-lg">
+                                            <i class="fas fa-stop me-2"></i> Non, terminer (gain: +{{ formatMoney(calcGainCoupRembourser()) }} €)
                                         </button>
                                     </div>
                                 </div>
@@ -1282,7 +1283,50 @@ createApp({
       this.saveToStorage();
     },
     
-    // Terminer avec seulement le remboursement (l'utilisateur refuse de rejouer)
+    // Rejouer le Coup 3 sans enregistrer dans l'historique
+    // Le gain ne se mentionne pas dans l'historique
+    replayCoup3WithoutHistory(){
+      // Réinitialiser le coup 3 pour permettre de rejouer
+      // Le résultat actuel (0) n'est pas enregistré dans l'historique
+      this.current.coup3.repartition = false;
+      this.current.coup3.repartitionValidated = false;
+      this.current.coup3.partsCount = 0;
+      this.current.coup3.repartitionCotes = [];
+      this.current.coup3.set = false;
+      this.current.coup3.choice = '';
+      this.current.coup3.cote = 1.0;
+      this.current.coup3.replayDecisionMade = false;
+      this.current.coup3.summary = '';
+      // Ne pas terminer la tentative, juste réinitialiser le coup 3
+      this.saveToStorage();
+    },
+    
+    // Calcule le gain du coup à rembourser uniquement
+    calcGainCoupRembourser(){
+      if(!this.current || !this.current.coup3.repartitionCotes || !this.current.coup3.repartitionCotes[0]) return 0;
+      
+      const coteRembourser = this.current.coup3.repartitionCotes[0];
+      const miseRembourser = this.calcMiseRembourser();
+      
+      if(coteRembourser.win === 'true'){
+        return miseRembourser * coteRembourser.cote;
+      }
+      return 0;
+    },
+    
+    // Terminer avec le gain du coup à rembourser (l'utilisateur refuse de rejouer)
+    finishWithRemboursementGain(){
+      // Marquer que la décision a été prise
+      this.current.coup3.replayDecisionMade = true;
+      
+      // Le résultat final est le gain du coup à rembourser uniquement
+      const gainRembourser = this.calcGainCoupRembourser();
+      this.current.coup3.set = true;
+      this.finishAttempt(gainRembourser, 'Coup3 - Remboursement uniquement');
+      this.nextAttempt();
+    },
+    
+    // Ancienne méthode conservée pour compatibilité
     finishWithRemboursementOnly(){
       // Marquer que la décision a été prise
       this.current.coup3.replayDecisionMade = true;
