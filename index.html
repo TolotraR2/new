@@ -321,6 +321,27 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Alerte champs obligatoires -->
+                                <div v-if="current.coup3.repartitionValidated && current.coup3.partsCount >= 2 && !allFieldsCompleted()" class="alert alert-warning mb-3">
+                                    <h6><i class="fas fa-exclamation-triangle"></i> Champs obligatoires non remplis :</h6>
+                                    <ul class="mb-0">
+                                        <li v-if="!current.coup3.repartitionCotes[0].cote || current.coup3.repartitionCotes[0].cote <= 1">
+                                            <strong>Coup à rembourser :</strong> Côte non renseignée (doit être > 1)
+                                        </li>
+                                        <li v-if="current.coup3.repartitionCotes[0].win === ''">
+                                            <strong>Coup à rembourser :</strong> Résultat (Gagné ?) non sélectionné
+                                        </li>
+                                        <li v-for="(cote, idx) in current.coup3.repartitionCotes.slice(1)" :key="'warn'+idx">
+                                            <span v-if="!cote.cote || cote.cote <= 1">
+                                                <strong>Coup à gagner {{ idx + 1 }} :</strong> Côte non renseignée (doit être > 1)
+                                            </span>
+                                            <span v-if="cote.win === ''">
+                                                <strong>Coup à gagner {{ idx + 1 }} :</strong> Résultat (Gagné ?) non sélectionné
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
                                 <!-- Coup à rembourser -->
                                 <div v-if="current.coup3.repartitionValidated && current.coup3.partsCount >= 2" class="mb-3">
                                     <h6><i class="fas fa-undo"></i> Coup à rembourser</h6>
@@ -332,8 +353,9 @@
                                         <div class="card-body">
                                             <div class="row">
                                                 <div class="col-12 col-lg-3 mb-3">
-                                                    <label class="form-label"><i class="fas fa-chart-line"></i> Côte :</label>
-                                                    <input type="number" class="form-control" v-model.number="current.coup3.repartitionCotes[0].cote" placeholder="Ex: 5" step="0.01" min="1.01" @input="updateRepartitionMisesNew">
+                                                    <label class="form-label"><i class="fas fa-chart-line"></i> Côte : <span class="text-danger">*</span></label>
+                                                    <input type="number" class="form-control" :class="{'is-invalid': !current.coup3.repartitionCotes[0].cote || current.coup3.repartitionCotes[0].cote <= 1}" v-model.number="current.coup3.repartitionCotes[0].cote" placeholder="Ex: 5 (obligatoire)" step="0.01" min="1.01" @input="updateRepartitionMisesNew" required>
+                                                    <div class="invalid-feedback">La côte est obligatoire et doit être supérieure à 1</div>
                                                 </div>
                                                 <div class="col-12 col-lg-3 mb-3">
                                                     <label class="form-label"><i class="fas fa-coins"></i> Mise calculée :</label>
@@ -342,8 +364,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-12 col-lg-3 mb-3">
-                                                    <label class="form-label"><i class="fas fa-trophy"></i> Gagné ?</label>
-                                                    <div class="mt-2">
+                                                    <label class="form-label"><i class="fas fa-trophy"></i> Gagné ? <span class="text-danger">*</span></label>
+                                                    <div class="mt-2" :class="{'border border-danger rounded p-2': current.coup3.repartitionCotes[0].win === ''}">
                                                         <div class="form-check form-check-inline">
                                                             <input class="form-check-input" type="radio" name="coupRembourserWin" id="coupRembourserWinYes" :checked="current.coup3.repartitionCotes[0].win === 'true'" @change="setSelectionWin(0, 'true')">
                                                             <label class="form-check-label" for="coupRembourserWinYes">
@@ -357,6 +379,7 @@
                                                             </label>
                                                         </div>
                                                     </div>
+                                                    <small v-if="current.coup3.repartitionCotes[0].win === ''" class="text-danger">Sélection obligatoire</small>
                                                 </div>
                                                 <div class="col-12 col-lg-3 mb-3">
                                                     <div class="alert alert-light">
@@ -389,8 +412,9 @@
                                         <div class="card-body">
                                             <div class="row">
                                                 <div class="col-12 col-lg-3 mb-3">
-                                                    <label class="form-label"><i class="fas fa-chart-line"></i> Côte :</label>
-                                                    <input type="number" class="form-control" v-model.number="cote.cote" placeholder="Ex: 2.5" step="0.01" min="1.01" @input="updateRepartitionMisesNew">
+                                                    <label class="form-label"><i class="fas fa-chart-line"></i> Côte : <span class="text-danger">*</span></label>
+                                                    <input type="number" class="form-control" :class="{'is-invalid': !cote.cote || cote.cote <= 1}" v-model.number="cote.cote" placeholder="Ex: 2.5 (obligatoire)" step="0.01" min="1.01" @input="updateRepartitionMisesNew" required>
+                                                    <div class="invalid-feedback">La côte est obligatoire et doit être supérieure à 1</div>
                                                 </div>
                                                 <div class="col-12 col-lg-3 mb-3">
                                                     <label class="form-label"><i class="fas fa-coins"></i> Mise calculée :</label>
@@ -399,8 +423,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-12 col-lg-3 mb-3">
-                                                    <label class="form-label"><i class="fas fa-trophy"></i> Gagné ?</label>
-                                                    <div class="mt-2">
+                                                    <label class="form-label"><i class="fas fa-trophy"></i> Gagné ? <span class="text-danger">*</span></label>
+                                                    <div class="mt-2" :class="{'border border-danger rounded p-2': cote.win === ''}">
                                                         <div class="form-check form-check-inline">
                                                             <input class="form-check-input" type="radio" :name="'coupGagner' + idx + 'Win'" :id="'coupGagner' + idx + 'WinYes'" :checked="cote.win === 'true'" @change="setSelectionWin(idx + 1, 'true')">
                                                             <label class="form-check-label" :for="'coupGagner' + idx + 'WinYes'">
@@ -414,6 +438,7 @@
                                                             </label>
                                                         </div>
                                                     </div>
+                                                    <small v-if="cote.win === ''" class="text-danger">Sélection obligatoire</small>
                                                 </div>
                                                 <div class="col-12 col-lg-3 mb-3">
                                                     <div class="alert alert-light">
@@ -475,24 +500,62 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Résultat final (somme des gains) -->
-                                <div class="alert" :class="calcRepartitionResult() >= 0 ? 'alert-success' : 'alert-danger'">
-                                    <h6><i class="fas fa-trophy"></i> Résultat du Coup 3 (Somme des gains)</h6>
-                                    <div class="row">
-                                        <div class="col-12 col-lg-6">
-                                            <p class="mb-1 fs-4"><strong>{{ calcRepartitionResult() >= 0 ? '+' : '' }}{{ formatMoney(calcRepartitionResult()) }} €</strong></p>
-                                        </div>
-                                        <div class="col-12 col-lg-6">
-                                            <p class="mb-0"><small>Résultat = Gain coup à rembourser + Gains coups à gagner</small></p>
-                                        </div>
+                                <!-- CAS 1: Coup à rembourser GAGNANT et TOUS les coups à gagner PERDANTS -->
+                                <!-- Dans ce cas, on a récupéré notre mise mais on n'a rien gagné -->
+                                <div v-if="isCoupRembourserGagnantEtTousCoupsGagnerPerdants() && !current.coup3.replayDecisionMade" class="alert alert-warning">
+                                    <h6><i class="fas fa-exclamation-triangle"></i> Mise remboursée - Aucun gain</h6>
+                                    <p class="mb-2">Le coup à rembourser est <strong class="text-success">GAGNANT</strong>, mais tous les coups à gagner sont <strong class="text-danger">PERDANTS</strong>.</p>
+                                    <p class="mb-3">Votre mise a été remboursée, mais vous n'avez rien gagné. Voulez-vous rejouer le Coup 3 ?</p>
+                                    
+                                    <div class="d-flex gap-3 flex-wrap">
+                                        <button @click="replayCoup3" class="btn btn-success btn-lg">
+                                            <i class="fas fa-redo me-2"></i> Oui, rejouer le Coup 3
+                                        </button>
+                                        <button @click="finishWithRemboursementOnly" class="btn btn-secondary btn-lg">
+                                            <i class="fas fa-stop me-2"></i> Non, terminer avec le remboursement
+                                        </button>
                                     </div>
                                 </div>
                                 
-                                <!-- Bouton Tentative suivante bien visible -->
-                                <div class="text-center mt-4">
-                                    <button @click="finishCoup3WithRepartitionNew" class="btn btn-success btn-lg px-5 py-3">
-                                        <i class="fas fa-arrow-right me-2"></i> Tentative suivante
-                                    </button>
+                                <!-- CAS 2: Au moins un coup à gagner GAGNANT (peu importe le coup à rembourser) -->
+                                <!-- OU l'utilisateur a choisi de ne pas rejouer -->
+                                <div v-if="hasAtLeastOneCoupGagnerGagnant() || current.coup3.replayDecisionMade">
+                                    <!-- Résultat final (somme des gains) -->
+                                    <div class="alert" :class="calcRepartitionResult() >= 0 ? 'alert-success' : 'alert-danger'">
+                                        <h6><i class="fas fa-trophy"></i> Résultat du Coup 3 (Somme des gains)</h6>
+                                        <div class="row">
+                                            <div class="col-12 col-lg-6">
+                                                <p class="mb-1 fs-4"><strong>{{ calcRepartitionResult() >= 0 ? '+' : '' }}{{ formatMoney(calcRepartitionResult()) }} €</strong></p>
+                                            </div>
+                                            <div class="col-12 col-lg-6">
+                                                <p class="mb-0"><small>Résultat = Gain coup à rembourser + Gains coups à gagner</small></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Bouton Tentative suivante bien visible -->
+                                    <div class="text-center mt-4">
+                                        <button @click="finishCoup3WithRepartitionNew" class="btn btn-success btn-lg px-5 py-3">
+                                            <i class="fas fa-arrow-right me-2"></i> Tentative suivante
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- CAS 3: Coup à rembourser PERDANT et tous les coups à gagner PERDANTS -->
+                                <!-- Perte totale -->
+                                <div v-if="isToutPerdu()">
+                                    <div class="alert alert-danger">
+                                        <h6><i class="fas fa-times-circle"></i> Perte totale</h6>
+                                        <p class="mb-1 fs-4"><strong>{{ formatMoney(calcRepartitionResult()) }} €</strong></p>
+                                        <p class="mb-0"><small>Tous les coups sont perdants.</small></p>
+                                    </div>
+                                    
+                                    <!-- Bouton Tentative suivante -->
+                                    <div class="text-center mt-4">
+                                        <button @click="finishCoup3WithRepartitionNew" class="btn btn-danger btn-lg px-5 py-3">
+                                            <i class="fas fa-arrow-right me-2"></i> Tentative suivante
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -636,7 +699,8 @@ createApp({
           partsCount: 0,
           repartitionValidated: false, // Indique si le nombre de coups a été validé
           repartitionCotes: [], // [{cote: number, win: boolean}] - premier = à rembourser, reste = à gagner
-          summary: ''
+          summary: '',
+          replayDecisionMade: false // Indique si l'utilisateur a pris une décision sur le replay
         }
       };
     },
@@ -1097,6 +1161,21 @@ createApp({
       return true;
     },
     
+    // Vérifie si tous les champs obligatoires sont remplis
+    allFieldsCompleted(){
+      if(!this.current || !this.current.coup3.repartitionCotes || this.current.coup3.repartitionCotes.length === 0) return false;
+      
+      // Vérifier toutes les côtes et tous les résultats
+      for(let i = 0; i < this.current.coup3.repartitionCotes.length; i++){
+        const cote = this.current.coup3.repartitionCotes[i];
+        // Vérifier que la côte est renseignée et > 1
+        if(!cote.cote || cote.cote <= 1) return false;
+        // Vérifier que le résultat est sélectionné
+        if(cote.win === '') return false;
+      }
+      return true;
+    },
+    
     // Définit si une sélection a gagné ou perdu
     setSelectionWin(index, value){
       if(!this.current || !this.current.coup3.repartitionCotes || !this.current.coup3.repartitionCotes[index]) return;
@@ -1143,6 +1222,76 @@ createApp({
       }
       
       return Number(totalGain.toFixed(2));
+    },
+    
+    // Vérifie si le coup à rembourser est gagnant ET tous les coups à gagner sont perdants
+    isCoupRembourserGagnantEtTousCoupsGagnerPerdants(){
+      if(!this.current || !this.current.coup3.repartitionCotes || this.current.coup3.repartitionCotes.length < 2) return false;
+      
+      // Vérifier que le coup à rembourser est gagnant
+      const coupRembourser = this.current.coup3.repartitionCotes[0];
+      if(coupRembourser.win !== 'true') return false;
+      
+      // Vérifier que TOUS les coups à gagner sont perdants
+      for(let i = 1; i < this.current.coup3.repartitionCotes.length; i++){
+        if(this.current.coup3.repartitionCotes[i].win === 'true') return false;
+      }
+      
+      return true;
+    },
+    
+    // Vérifie si au moins un coup à gagner est gagnant
+    hasAtLeastOneCoupGagnerGagnant(){
+      if(!this.current || !this.current.coup3.repartitionCotes || this.current.coup3.repartitionCotes.length < 2) return false;
+      
+      for(let i = 1; i < this.current.coup3.repartitionCotes.length; i++){
+        if(this.current.coup3.repartitionCotes[i].win === 'true') return true;
+      }
+      
+      return false;
+    },
+    
+    // Vérifie si tout est perdu (coup à rembourser ET tous les coups à gagner)
+    isToutPerdu(){
+      if(!this.current || !this.current.coup3.repartitionCotes || this.current.coup3.repartitionCotes.length < 2) return false;
+      
+      // Vérifier que le coup à rembourser est perdant
+      const coupRembourser = this.current.coup3.repartitionCotes[0];
+      if(coupRembourser.win !== 'false') return false;
+      
+      // Vérifier que TOUS les coups à gagner sont perdants
+      for(let i = 1; i < this.current.coup3.repartitionCotes.length; i++){
+        if(this.current.coup3.repartitionCotes[i].win === 'true') return false;
+      }
+      
+      return true;
+    },
+    
+    // Rejouer le Coup 3 (réinitialiser)
+    replayCoup3(){
+      // Réinitialiser le coup 3 pour permettre de rejouer
+      this.current.coup3.repartition = false;
+      this.current.coup3.repartitionValidated = false;
+      this.current.coup3.partsCount = 0;
+      this.current.coup3.repartitionCotes = [];
+      this.current.coup3.set = false;
+      this.current.coup3.choice = '';
+      this.current.coup3.cote = 1.0;
+      this.current.coup3.replayDecisionMade = false;
+      this.current.coup3.summary = '';
+      this.saveToStorage();
+    },
+    
+    // Terminer avec seulement le remboursement (l'utilisateur refuse de rejouer)
+    finishWithRemboursementOnly(){
+      // Marquer que la décision a été prise
+      this.current.coup3.replayDecisionMade = true;
+      
+      // Le résultat est le gain du coup à rembourser uniquement
+      // Comme le coup à rembourser est gagnant, on récupère la mise * cote
+      // Mais les coups à gagner sont perdants, donc on perd ces mises
+      // Le résultat final est calculé par calcRepartitionResult()
+      this.saveToStorage();
     },
     
     // Termine le coup 3 avec le nouveau système de répartition
