@@ -770,10 +770,10 @@ createApp({
     applyCoup1Choice(){
       const choice = this.current.coup1.choice;
       if(!choice) return;
-      
+
       const base = Number(this.settings.miseBase) || 0;
       const cote = Number(this.current.coup1.cote) || 1;
-      
+
       if(choice === 'gain'){
         const gain = base * cote;
         this.current.coup1.gain = gain;
@@ -781,8 +781,9 @@ createApp({
         this.current.coup1.gain = 0;
         // fin tentative
         this.finishAttempt(-base, 'Perdu Coup1');
+        this.showResultatFinal();
       }
-      
+
       this.current.coup1.set = true;
       this.saveToStorage();
     },
@@ -793,11 +794,11 @@ createApp({
     applyCoup2Choice(){
       const choice = this.current.coup2.choice;
       if(!choice) return;
-      
+
       const base = Number(this.settings.miseBase) || 0;
       const cote = Number(this.current.coup2.cote) || 1;
       const prevGain = Number(this.current.coup1.gain) || 0;
-      
+
       if(choice === 'gain'){
         const gain = prevGain * cote;
         this.current.coup2.gain = gain;
@@ -805,8 +806,9 @@ createApp({
         this.current.coup2.gain = 0;
         // spec: si perte au coup2 le résultat est -mise de base
         this.finishAttempt(-base, 'Perdu Coup2');
+        this.showResultatFinal();
       }
-      
+
       // prepare coup3 mise
       this.current.coup2.set = true;
       this.current.coup3.mise = Math.max(0, (this.current.coup2.gain || 0) - base);
@@ -824,11 +826,11 @@ createApp({
     applyCoup3Choice(){
       const choice = this.current.coup3.choice;
       if(!choice) return;
-      
+
       const base = Number(this.settings.miseBase) || 0;
       const cote = Number(this.current.coup3.cote) || 1;
       const mise = Number(this.current.coup3.mise) || 0;
-      
+
       if(choice === 'gain'){
         const gain = mise * cote;
         this.current.coup3.set = true;
@@ -836,11 +838,15 @@ createApp({
         this.current.coup3.canRetry = false;
         // Pour coup 3 simple : le résultat final est le gain total (pas le bénéfice net)
         this.finishAttempt(gain, 'Gagné Coup3 (sans répartition)');
+        this.showResultatFinal();
       } else if(choice === 'perte'){
         this.current.coup3.set = true;
         this.current.coup3.gain = 0;
         this.current.coup3.showRetry = true;
         // Ne pas terminer automatiquement, attendre la réponse de l'utilisateur
+        // Mais afficher le résultat final quand même
+        this.finishAttempt(0, 'Perdu Coup3 (sans répartition)');
+        this.showResultatFinal();
       }
       this.saveToStorage();
     },
@@ -1049,7 +1055,12 @@ createApp({
       // Créer un élément pour afficher le résultat
       const resultatElement = document.createElement('div');
       resultatElement.className = 'resultat-final';
-      resultatElement.innerHTML = message;
+      resultatElement.innerHTML = `
+        ${message}
+        <button id="boutonTentativeSuivante" class="btn btn-primary mt-3">
+          <i class="fas fa-arrow-right"></i> Tentative suivante
+        </button>
+      `;
 
       // Trouver l'endroit où insérer le résultat (avant les boutons de navigation)
       const navigationElement = document.querySelector('.row.mt-4');
@@ -1057,15 +1068,18 @@ createApp({
         navigationElement.parentNode.insertBefore(resultatElement, navigationElement);
       }
 
-      // Attendre 3 secondes avant de passer à la tentative suivante
-      setTimeout(() => {
-        if(this.currentIndex < this.attempts.length-1){
-          this.currentIndex++;
-        } else {
-          alert('Dernière tentative déjà atteinte.');
-        }
-        this.saveToStorage();
-      }, 3000);
+      // Ajouter un gestionnaire d'événement pour le bouton
+      const bouton = document.getElementById('boutonTentativeSuivante');
+      if (bouton) {
+        bouton.addEventListener('click', () => {
+          if(this.currentIndex < this.attempts.length-1){
+            this.currentIndex++;
+          } else {
+            alert('Dernière tentative déjà atteinte.');
+          }
+          this.saveToStorage();
+        });
+      }
     },
     saveToStorage(){
       try {
