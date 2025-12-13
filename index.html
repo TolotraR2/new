@@ -83,12 +83,42 @@
     .couleur{
       color: rgb(255, 255, 255);
     }
-    .kely{
-      background-color: rgb(241, 168, 31);
-    }
     .resultat-final {
-      background-color: orange;
+      background-color: rgb(241, 168, 31);
+      color: rgb(0, 0, 0);
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    .resultat-coup-gain {
+      background-color: #b5f3d6;
+      color: rgba(0, 0, 0, 0.514);
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    .resultat-coup-perte {
+      background-color: #dc3545;
       color: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    .resultat-final-orange {
+      background-color: rgb(241, 168, 31);
+      color: rgb(0, 0, 0);
       padding: 15px;
       border-radius: 10px;
       margin: 15px 0;
@@ -119,9 +149,6 @@
             <div class="d-flex flex-wrap gap-2">
                 <button @click="initAttempts" class="btn btn-primary flex-fill flex-md-grow-0" style="min-width: 140px;">
                     <i class="fas fa-plus"></i> Créer les tentatives
-                </button>
-                <button @click="toggleHistorique" class="btn btn-outline-info flex-fill flex-md-grow-0" style="min-width: 140px;">
-                    <i class="fas fa-history"></i> {{ showHistorique ? 'Masquer' : 'Afficher' }} l'historique
                 </button>
                 <button @click="resetAttempts" class="btn btn-outline-warning flex-fill flex-md-grow-0" style="min-width: 140px;">
                     <i class="fas fa-undo"></i> Réinitialiser
@@ -172,23 +199,27 @@
                             </select>
                         </div>
                     </div>
-                    <div v-if="current.coup1.set" class="alert mt-2" :class="current.coup1.gain > 0 ? 'alert-success' : 'alert-danger'">
-                        <i :class="current.coup1.gain > 0 ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger'"></i>
+                    <div v-if="current.coup1.set" :class="current.coup1.gain > 0 ? 'resultat-coup-gain' : 'resultat-coup-perte'">
+                        <i :class="current.coup1.gain > 0 ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
                         {{ current.coup1.gain > 0 ? 'Gain: +' + formatMoney(current.coup1.gain) + ' €' : 'Perte: -' + formatMoney(settings.miseBase) + ' €  Fin de partie' }}
-                        
-                        <!-- Bouton Tentative suivante si perte au coup 1 -->
-                        <div v-if="current.coup1.choice === 'perte'" class="mt-3">
-                            <button v-if="!isLastAttempt" @click="nextAttempt" class="btn btn-primary">
-                                <i class="fas fa-arrow-right"></i> Tentative suivante
+                    </div>
+
+                    <!-- Résultat final de la tentative si perte au coup 1 -->
+                    <div v-if="current.coup1.choice === 'perte'" class="resultat-final-orange mt-3">
+                        <i class="fas fa-times-circle"></i>
+                        Résultat final de la tentative : -{{ formatMoney(settings.miseBase) }} €
+                    </div>
+
+                    <!-- Bouton Tentative suivante si perte au coup 1 -->
+                    <div v-if="current.coup1.choice === 'perte'" class="mt-3">
+                        <button v-if="!isLastAttempt" @click="nextAttempt" class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i> Tentative suivante
+                        </button>
+                        <div v-if="isLastAttempt" class="d-flex flex-wrap gap-2">
+                            <button @click="saveSessionAndRestart" class="btn btn-success">
+                                <i class="fas fa-save"></i> Sauvegarder session et recommencer
                             </button>
-                            <div v-if="isLastAttempt" class="d-flex flex-wrap gap-2">
-                                <button @click="saveSessionAndRestart" class="btn btn-success">
-                                    <i class="fas fa-save"></i> Sauvegarder session et recommencer
-                                </button>
-                                <button @click="saveToHistorique" class="btn btn-info">
-                                    <i class="fas fa-save"></i> Sauvegarder dans l'historique
-                                </button>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -226,23 +257,30 @@
                             </select>
                         </div>
                     </div>
-                    <div v-if="current.coup2.set" class="alert mt-2" :class="current.coup2.gain > 0 ? 'alert-success' : 'alert-danger'">
-                        <i :class="current.coup2.gain > 0 ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger'"></i>
+                    <div v-if="current.coup2.set" :class="current.coup2.gain > 0 ? 'resultat-coup-gain' : 'resultat-coup-perte'">
+                        <i :class="current.coup2.gain > 0 ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
                         {{ current.coup2.gain > 0 ? 'Gain depuis le coup 1: +' + formatMoney(current.coup2.gain) + ' €' : 'Perte: -' + formatMoney(settings.miseBase) + ' €  Fin de partie' }}
-                        <p v-if="current.coup2.gain > 0" class="mb-0"><small><em>On recupère notre mise de base ({{ formatMoney(settings.miseBase) }} €)</em></small></p>
-                        <!-- Bouton Tentative suivante si perte au coup 2 -->
-                        <div v-if="current.coup2.choice === 'perte'" class="mt-3">
-                            <button v-if="!isLastAttempt" @click="nextAttempt" class="btn btn-primary">
-                                <i class="fas fa-arrow-right"></i> Tentative suivante
+                        <p v-if="current.coup2.gain > 0" class="mb-0"><small><em>On recupère notre mise de base ({{ formatMoney(settings.miseBase) }} €) au coup 3 on misera donc : {{ formatMoney(current.coup3.mise) }} €</em></small></p>
+                    </div>
+
+                    <!-- Résultat final de la tentative si perte au coup 2 -->
+                    <div v-if="current.coup2.choice === 'perte'" class="resultat-final-orange mt-3">
+                        <i class="fas fa-times-circle"></i>
+                        Résultat final de la tentative : -{{ formatMoney(settings.miseBase) }} €
+                    </div>
+
+                    <!-- Bouton Tentative suivante si perte au coup 2 -->
+                    <div v-if="current.coup2.choice === 'perte'" class="mt-3">
+                        <button v-if="!isLastAttempt" @click="nextAttempt" class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i> Tentative suivante
+                        </button>
+                        <div v-if="isLastAttempt" class="d-flex flex-wrap gap-2">
+                            <button @click="saveSessionAndRestart" class="btn btn-success">
+                                <i class="fas fa-save"></i> Sauvegarder session et recommencer
                             </button>
-                            <div v-if="isLastAttempt" class="d-flex flex-wrap gap-2">
-                                <button @click="saveSessionAndRestart" class="btn btn-success">
-                                    <i class="fas fa-save"></i> Sauvegarder session et recommencer
-                                </button>
-                                <button @click="saveToHistorique" class="btn btn-info">
-                                    <i class="fas fa-save"></i> Sauvegarder dans l'historique
-                                </button>
-                            </div>
+                            <button @click="saveToHistorique" class="btn btn-info">
+                                <i class="fas fa-save"></i> Sauvegarder dans l'historique
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -301,11 +339,13 @@
                                 </div>
                             </div>
 
-                            <!-- Bouton Fin de partie pour coup 3 simple -->
-                            <div v-if="current.coup3.set && !current.coup3.repartition" class="mt-3">
-                                <button @click="finishCoup3Simple" class="btn btn-primary">
-                                    <i class="fas fa-arrow-right"></i> Fin de partie
-                                </button>
+                            <!-- Résultat du Coup 3 simple -->
+                            <div v-if="current.coup3.set && !current.coup3.repartition" :class="current.coup3.gain > 0 ? 'resultat-coup-gain' : 'resultat-coup-perte'">
+                                <i :class="current.coup3.gain > 0 ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                                {{ current.coup3.gain > 0 ? 'Gain: +' + formatMoney(current.coup3.gain) + ' €' : 'Perte: 0 €' }}
+                                <div class="mt-3">
+                                   <h1><i class="fas fa-arrow-right"></i> Fin de partie</h1>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -455,10 +495,14 @@
                                             <p><strong>Mise totale :</strong> {{ formatMoney(current.coup3.mise) }} €</p>
                                         </div>
                                         <div class="col-12 col-lg-4">
-                                            <p><strong>Mise coup à rembourser :</strong> {{ formatMoney(calcMiseRembourser()) }} €</p>
+                                            <p><strong>Mise coup à rembourser :</strong> {{ formatMoney(calcMiseRembourser()) }} € @ {{ current.coup3.repartitionCotes[0].cote }}</p>
                                         </div>
                                         <div class="col-12 col-lg-4">
-                                            <p><strong>Total mises coups à gagner :</strong> {{ formatMoney(calcResteAGagner()) }} €</p>
+                                            <p><strong>Total mises coups à gagner :</strong> {{ formatMoney(calcResteAGagner()) }} €
+                                            <br>
+                                            <span v-for="(cote, idx) in current.coup3.repartitionCotes.slice(1)" :key="'cote-' + idx">
+                                                @{{ cote.cote }}<span v-if="idx < current.coup3.repartitionCotes.slice(1).length - 1">, </span>
+                                            </span></p>
                                         </div>
                                     </div>
                                 </div>
@@ -508,31 +552,31 @@
                                 <!-- OU l'utilisateur a choisi de ne pas rejouer -->
                                 <div v-if="hasAtLeastOneCoupGagnerGagnant() || current.coup3.replayDecisionMade">
                                     <!-- Résultat final (somme des gains) -->
-                                    <div class="alert" :class="calcRepartitionResult() >= 0 ? 'alert-success' : 'alert-danger'">
+                                    <div class="resultat-final-orange">
                                         <div class="row">
                                             <div class="col-12 col-lg-6">
-                                                <p class="mb-1 fs-4"><strong>Partie terminée 
+                                                <p class="mb-1 fs-4"><strong>Partie terminée
                                                   <br>bénéfice = {{ calcRepartitionResult() >= 0 ? '+' : '' }}{{ formatMoney(calcRepartitionResult()) }} €</strong></p>
                                             </div>
-                                    </div>
-                                    
+                                        </div>
+            
                                     <!-- Bouton Tentative suivante bien visible -->
                                     <div class="text-center mt-4">
-                                        <button @click="finishCoup3WithRepartitionNew" class="btn btn-success btn-lg px-5 py-3">
-                                            <i class="fas fa-arrow-right me-2"></i> Tentative suivante
+                                        <button @click="finishCoup3WithRepartitionNew" class="btn btn-primary">
+                                            <i class="fas fa-arrow-right me-2"></i> Fin de partie
                                         </button>
                                     </div>
-                                </div>
+                                    </div>
                                 
                                 <!-- CAS 3: Coup à rembourser PERDANT et tous les coups à gagner PERDANTS -->
                                 <!-- Perte totale -->
                                 <div v-if="isToutPerdu()">
-                                    <div class="alert alert-danger">
+                                    <div class="resultat-final">
                                         <h6><i class="fas fa-times-circle"></i> Perte totale</h6>
                                         <p class="mb-1 fs-4"><strong>{{ formatMoney(calcRepartitionResult()) }} €</strong></p>
                                         <p class="mb-0"><small>Tous les coups sont perdants.</small></p>
                                     </div>
-                                    
+
                                     <!-- Bouton Tentative suivante -->
                                     <div class="text-center mt-4">
                                         <button @click="finishCoup3WithRepartitionNew" class="btn btn-danger btn-lg px-5 py-3">
@@ -549,13 +593,13 @@
                     <!-- Résultat final et navigation -->
             <div class="row mt-4">
                 <div class="col-12 col-lg-8 mb-3">
-                    <div class="alert" :class="current.finished ? (current.attemptResult >= 0 ? 'alert-success kely' : 'alert-danger') : 'alert-secondary'">
-                        <i v-if="current.finished" :class="current.attemptResult >= 0 ? 'fas' : 'fas fa-times-circle'"></i>
-                        <strong class="couleur">{{ current.finished ? ' Résultat final :  Bénéfice ' + <span class="noir">(current.attemptResult >= 0 ? '+' : '')</span> + formatMoney(current.attemptResult) + ' €' : 'Tentative en cours...' }}</strong>
+                    <div class="resultat-final">
+                        <i v-if="current.finished" :class="current.attemptResult >= 0 ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                        <strong>{{ current.finished ? 'Résultat final de la tentative : ' + (current.attemptResult >= 0 ? '+' : '') + formatMoney(current.attemptResult) + ' €' : 'Tentative en cours...' }}</strong>
                     </div>
                 </div>
                 <div class="col-12 col-lg-4 d-flex align-items-center justify-content-lg-end flex-wrap gap-2">
-                    <button v-if="!allAttemptsFinished" :disabled="!current.finished" @click="nextAttempt" class="btn btn-primary w-100 w-lg-auto">
+                    <button v-if="!allAttemptsFinished" @click="nextAttempt" class="btn btn-primary w-100 w-lg-auto">
                         <i class="fas fa-arrow-right"></i> Tentative suivante
                     </button>
                     <button v-if="allAttemptsFinished || current.finished" @click="saveSessionAndRestart" class="btn btn-success w-100 w-lg-auto">
@@ -569,105 +613,6 @@
         </div>
     </div>
 
-    <!-- Historique complet (tentatives en cours + sessions sauvegardées) -->
-    <div v-if="showHistorique && (attempts.length && attempts.some(a => a.finished) || sessions.length > 0)" class="card shadow mb-4">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0"><i class="fas fa-history"></i> Historique complet</h5>
-        </div>
-        <div class="card-body">
-            <p class="text-muted small">Historique des tentatives en cours et sessions sauvegardées.</p>
-
-            <!-- Récapitulatif des tentatives en cours -->
-            <div v-if="attempts.length && attempts.some(a => a.finished)" class="mb-4">
-                <h6 class="text-primary"><i class="fas fa-chart-line"></i> Tentatives en cours</h6>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-list-ol"></i> Tentative</th>
-                                <th><i class="fas fa-euro-sign"></i> Résultat</th>
-                                <th><i class="fas fa-plus"></i> Cumul</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(a, idx) in attempts" :key="idx" v-if="a && a.finished && a.attemptResult !== null">
-                                <td>{{ idx + 1 }}</td>
-                                <td :class="a.attemptResult >= 0 ? 'text-success' : 'text-danger'">
-                                    <strong>{{ a.attemptResult >= 0 ? '+' : '' }}{{ formatMoney(a.attemptResult) }} €</strong>
-                                </td>
-                                <td :class="getCumulAtIndex(idx) >= 0 ? 'text-success' : 'text-danger'">
-                                    <strong>{{ getCumulAtIndex(idx) >= 0 ? '+' : '' }}{{ formatMoney(getCumulAtIndex(idx)) }} €</strong>
-                                </td>
-                            </tr>
-                            <tr class="table-primary">
-                                <td colspan="2"><strong><i class="fas fa-plus"></i> Total</strong></td>
-                                <td :class="totalCumul >= 0 ? 'text-success' : 'text-danger'">
-                                    <strong>{{ totalCumul >= 0 ? '+' : '' }}{{ formatMoney(totalCumul) }} €</strong>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Séparateur si les deux sections sont présentes -->
-            <hr v-if="attempts.length && attempts.some(a => a.finished) && sessions.length > 0">
-
-            <!-- Historique des sessions sauvegardées -->
-            <div v-if="sessions.length > 0">
-                <h6 class="text-info"><i class="fas fa-archive"></i> Sessions sauvegardées</h6>
-                <p class="text-muted small">L'historique est sauvegardé de manière permanente dans votre navigateur.</p>
-                <button @click="clearAll" class="btn btn-danger mb-3">
-                    <i class="fas fa-trash"></i> Effacer tout l'historique
-                </button>
-
-                <div v-for="(session, index) in sessions.slice().reverse()" :key="index" class="card mb-3">
-                    <div class="card-header">
-                        <h6 class="mb-0"><i class="fas fa-tag"></i> {{ session.name }} - <i class="fas fa-calendar"></i> {{ new Date(session.date).toLocaleString() }}</h6>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-2">
-                            <i class="fas fa-hashtag"></i> Tentatives: {{ session.nbTentatives }} |
-                            <i class="fas fa-coins"></i> Mise base: {{ formatMoney(session.miseBase) }} €
-                        </p>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th><i class="fas fa-list-ol"></i> Tentative</th>
-                                        <th><i class="fas fa-euro-sign"></i> Résultat</th>
-                                        <th><i class="fas fa-plus"></i> Cumul</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="(attempt, attemptIdx) in session.attempts" :key="attemptIdx" v-if="attempt && attempt.finished && attempt.attemptResult !== null">
-                                        <td>{{ attemptIdx + 1 }}</td>
-                                        <td :class="attempt.attemptResult >= 0 ? 'text-success' : 'text-danger'">
-                                            {{ attempt.attemptResult >= 0 ? '+' : '' }}{{ formatMoney(attempt.attemptResult) }} €
-                                        </td>
-                                        <td :class="getSessionCumulAtIndex(session.attempts, attemptIdx) >= 0 ? 'text-success' : 'text-danger'">
-                                            {{ getSessionCumulAtIndex(session.attempts, attemptIdx) >= 0 ? '+' : '' }}{{ formatMoney(getSessionCumulAtIndex(session.attempts, attemptIdx)) }} €
-                                        </td>
-                                    </tr>
-                                    <tr class="table-primary">
-                                        <td colspan="2"><strong><i class="fas fa-plus"></i> Total session</strong></td>
-                                        <td :class="session.totalCumul >= 0 ? 'text-success' : 'text-danger'">
-                                            <strong>{{ session.totalCumul >= 0 ? '+' : '' }}{{ formatMoney(session.totalCumul) }} €</strong>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Message si aucun historique -->
-            <div v-if="sessions.length === 0 && !(attempts.length && attempts.some(a => a.finished))" class="alert alert-info">
-                <i class="fas fa-info-circle"></i> Aucun historique disponible.
-            </div>
-        </div>
-    </div>
 
     <div v-if="showStorageWarning" class="alert alert-warning">
         <h6><i class="fas fa-exclamation-triangle"></i> Avertissement :</h6>
@@ -1042,10 +987,16 @@ createApp({
       // also store the note in coup3.summary if not set
       if(!this.current.coup3.summary) this.current.coup3.summary = note;
       this.saveToStorage();
+      console.log('Tentative terminée:', this.currentIndex, 'Résultat:', this.current.attemptResult);
     },
     nextAttempt(){
-      // Afficher le résultat final avant de passer à la tentative suivante
-      this.showResultatFinal();
+      // Passer à la tentative suivante
+      if(this.currentIndex < this.attempts.length-1){
+        this.currentIndex++;
+        this.saveToStorage();
+      } else {
+        alert('Dernière tentative déjà atteinte.');
+      }
     },
     showResultatFinal(){
       // Afficher le résultat final avec un fond orange et du texte blanc
@@ -1130,6 +1081,35 @@ createApp({
           this.settings = Object.assign(this.settings, obj.settings || {});
           this.attempts = obj.attempts || this.attempts;
           this.currentIndex = obj.index || 0;
+
+          // Vérifier et corriger les tentatives non terminées
+          if(this.attempts && this.attempts.length > 0){
+            this.attempts.forEach((attempt, index) => {
+              if(attempt && attempt.attemptResult === null && attempt.finished === false){
+                // Tentative de corriger les tentatives non terminées
+                if(attempt.coup1 && attempt.coup1.choice === 'perte'){
+                  attempt.finished = true;
+                  attempt.attemptResult = -this.settings.miseBase;
+                  console.log('Correction tentative', index, 'Coup1 perdu');
+                }
+                else if(attempt.coup2 && attempt.coup2.choice === 'perte'){
+                  attempt.finished = true;
+                  attempt.attemptResult = -this.settings.miseBase;
+                  console.log('Correction tentative', index, 'Coup2 perdu');
+                }
+                else if(attempt.coup3 && attempt.coup3.choice === 'perte'){
+                  attempt.finished = true;
+                  attempt.attemptResult = 0;
+                  console.log('Correction tentative', index, 'Coup3 perdu');
+                }
+                else if(attempt.coup3 && attempt.coup3.choice === 'gain'){
+                  attempt.finished = true;
+                  attempt.attemptResult = attempt.coup3.mise * attempt.coup3.cote;
+                  console.log('Correction tentative', index, 'Coup3 gagné');
+                }
+              }
+            });
+          }
         }
         const sessionsRaw = localStorage.getItem('sim_sessions');
         if(sessionsRaw){
@@ -1574,6 +1554,113 @@ createApp({
       }
 
       alert('Test effectué ! Consultez la console pour plus de détails.');
+    },
+    testHistorique(){
+      // Test spécifique pour vérifier l'affichage de l'historique
+      console.log('=== TEST DE L\'HISTORIQUE ===');
+
+      // Créer des données de test
+      this.settings.nbTentatives = 3;
+      this.settings.miseBase = 10;
+      this.initAttempts();
+
+      // Simuler quelques résultats
+      if(this.attempts.length >= 3){
+        this.attempts[0].finished = true;
+        this.attempts[0].attemptResult = 15.50;
+
+        this.attempts[1].finished = true;
+        this.attempts[1].attemptResult = -10.00;
+
+        this.attempts[2].finished = true;
+        this.attempts[2].attemptResult = 25.75;
+
+        console.log('Données de test créées:', this.attempts);
+        console.log('Total cumul:', this.totalCumul);
+
+        // Vérifier que l'historique s'affiche correctement
+        this.showHistorique = true;
+        console.log('Historique affiché:', this.showHistorique);
+
+        alert('Test de l\'historique terminé ! Vérifiez la console et l\'interface pour voir les résultats.');
+      }
+    },
+    createTestData(){
+      // Créer une session de test avec des données
+      const testSession = {
+        name: 'Session Test',
+        attempts: [
+          {
+            finished: true,
+            attemptResult: 15.50,
+            coup1: { cote: 2.0, set: true, gain: 20.00, choice: 'gain' },
+            coup2: { cote: 1.5, set: true, gain: 30.00, choice: 'gain' },
+            coup3: { mise: 20.00, cote: 1.75, set: true, choice: 'gain', gain: 35.00 }
+          },
+          {
+            finished: true,
+            attemptResult: -10.00,
+            coup1: { cote: 1.8, set: true, gain: 0, choice: 'perte' },
+            coup2: { cote: 0, set: false, gain: 0, choice: '' },
+            coup3: { mise: 0, cote: 0, set: false, choice: '', gain: 0 }
+          },
+          {
+            finished: true,
+            attemptResult: 25.75,
+            coup1: { cote: 2.5, set: true, gain: 25.00, choice: 'gain' },
+            coup2: { cote: 1.8, set: true, gain: 45.00, choice: 'gain' },
+            coup3: { mise: 35.00, cote: 2.0, set: true, choice: 'gain', gain: 70.00 }
+          }
+        ],
+        totalCumul: 31.25,
+        date: new Date().toISOString(),
+        nbTentatives: 3,
+        miseBase: 10
+      };
+
+      this.sessions.push(testSession);
+      this.saveSessionsToStorage();
+      alert('Données de test créées avec succès ! Vous pouvez maintenant voir le tableau avec des tentatives.');
+    },
+    testResultatFinal(){
+      // Test pour vérifier l'affichage du résultat final après un coup perdu
+      console.log('=== TEST RESULTAT FINAL ===');
+
+      // Configurer les paramètres
+      this.settings.nbTentatives = 2;
+      this.settings.miseBase = 10;
+      this.initAttempts();
+
+      // Simuler une perte au Coup 1 pour la première tentative
+      if(this.attempts.length >= 1){
+        this.currentIndex = 0;
+        this.current.coup1.cote = 1.5;
+        this.current.coup1.choice = 'perte';
+        this.applyCoup1Choice();
+
+        console.log('Tentative 1 - Coup 1 perdu:', this.current);
+        console.log('Résultat final attendu: -10.00 €');
+        console.log('Résultat final actuel:', this.current.attemptResult);
+      }
+
+      // Simuler une perte au Coup 2 pour la deuxième tentative
+      if(this.attempts.length >= 2){
+        this.currentIndex = 1;
+        this.current.coup1.cote = 2.0;
+        this.current.coup1.choice = 'gain';
+        this.applyCoup1Choice();
+
+        // Maintenant que Coup 1 est gagné, simuler une perte au Coup 2
+        this.current.coup2.cote = 1.5;
+        this.current.coup2.choice = 'perte';
+        this.applyCoup2Choice();
+
+        console.log('Tentative 2 - Coup 2 perdu:', this.current);
+        console.log('Résultat final attendu: -10.00 €');
+        console.log('Résultat final actuel:', this.current.attemptResult);
+      }
+
+      alert('Test du résultat final terminé ! Vérifiez la console pour voir les résultats et l\'interface pour voir l\'affichage du résultat final avec fond orange.');
     }
   },
   mounted(){
