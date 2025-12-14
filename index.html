@@ -260,7 +260,7 @@
                     <div v-if="current.coup2.set" :class="current.coup2.gain > 0 ? 'resultat-coup-gain' : 'resultat-coup-perte'">
                         <i :class="current.coup2.gain > 0 ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
                         {{ current.coup2.gain > 0 ? 'Gain depuis le coup 1: +' + formatMoney(current.coup2.gain) + ' €' : 'Perte: -' + formatMoney(settings.miseBase) + ' €  Fin de partie' }}
-                        <p v-if="current.coup2.gain > 0" class="mb-0"><small><em>On recupère notre mise de base ({{ formatMoney(settings.miseBase) }} €) au coup 3 on misera donc : {{ formatMoney(current.coup3.mise) }} €</em></small></p>
+                        <p v-if="current.coup2.gain > 0" class="mb-0"><small><em>On recupère notre mise de base ({{ formatMoney(settings.miseBase) }} €). Au coup 3 on misera donc : {{ formatMoney(current.coup3.mise) }} €</em></small></p>
                     </div>
 
                     <!-- Résultat final de la tentative si perte au coup 2 -->
@@ -442,43 +442,69 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div><div class="mt-4">
-        <h6 class="text-primary"><i class="fas fa-chart-line"></i> Résultats des coups</h6>
-        <div class="mb-3">
-            <strong>Coup à rembourser : Gagnée ?</strong>
-            <div class="mt-2">
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="coupRembourserWin" id="coupRembourserWinYes" :checked="current.coup3.repartitionCotes[0] && current.coup3.repartitionCotes[0].win === 'true'" @change="setSelectionWin(0, 'true')">
-                    <label class="form-check-label" for="coupRembourserWinYes">
-                        <strong>Oui</strong>
-                    </label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="coupRembourserWin" id="coupRembourserWinNo" :checked="current.coup3.repartitionCotes[0] && current.coup3.repartitionCotes[0].win === 'false'" @change="setSelectionWin(0, 'false')">
-                    <label class="form-check-label" for="coupRembourserWinNo">
-                        <strong>Non</strong>
-                    </label>
-                </div>
-            </div>
-        </div>
-        <div v-for="(cote, idx) in current.coup3.repartitionCotes.slice(1)" :key="'result'+idx" class="mb-3">
-            <strong>Coup à gagner {{ idx + 1 }} : Gagnée ?</strong>
-            <div class="mt-2">
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" :name="'coupGagner' + idx + 'Win'" :id="'coupGagner' + idx + 'WinYes'" :checked="cote && cote.win === 'true'" @change="setSelectionWin(idx + 1, 'true')">
-                    <label class="form-check-label" :for="'coupGagner' + idx + 'WinYes'">
-                        <strong>Oui</strong>
-                    </label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" :name="'coupGagner' + idx + 'Win'" :id="'coupGagner' + idx + 'WinNo'" :checked="cote && cote.win === 'false'" @change="setSelectionWin(idx + 1, 'false')">
-                    <label class="form-check-label" :for="'coupGagner' + idx + 'WinNo'">
-                        <strong>Non</strong>
-                    </label>
-                </div>
-            </div>
-        </div>
-    </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Résumé de la configuration -->
+                            <div v-if="allCoupsGagnerCotesEntered() && current.coup3.partsCount >= 2" class="alert alert-info mb-3">
+                                <h6><i class="fas fa-info-circle"></i> Récapitulatif</h6>
+                                <div class="row">
+                                    <div class="col-12 col-lg-4">
+                                        <p><strong>Mise totale :</strong> {{ formatMoney(current.coup3.mise) }} €</p>
+                                    </div>
+                                    <div class="col-12 col-lg-4">
+                                        <p><strong>Mise coup à rembourser :</strong> {{ formatMoney(calcMiseRembourser()) }} € @ {{ current.coup3.repartitionCotes[0].cote }}</p>
+                                    </div>
+                                    <div class="col-12 col-lg-4">
+                                        <p><strong>Total mises coups à gagner :</strong> {{ formatMoney(calcResteAGagner()) }} €</p>
+                                        <ul class="mb-0">
+                                            <li v-for="(cote, idx) in current.coup3.repartitionCotes.slice(1)" :key="'detail-' + idx">
+                                                <strong>Coup à gagner {{ idx + 1 }} :</strong> {{ formatMoney(calcMiseCoupGagner(idx + 1)) }} € @ {{ cote.cote }}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <h6 class="text-primary"><i class="fas fa-chart-line"></i> Résultats des coups</h6>
+                                <div class="mb-3">
+                                    <strong>Coup à rembourser : Gagnée ?</strong>
+                                    <div class="mt-2">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="coupRembourserWin" id="coupRembourserWinYes" :checked="current.coup3.repartitionCotes[0] && current.coup3.repartitionCotes[0].win === 'true'" @change="setSelectionWin(0, 'true')">
+                                            <label class="form-check-label" for="coupRembourserWinYes">
+                                                <strong>Oui</strong>
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="coupRembourserWin" id="coupRembourserWinNo" :checked="current.coup3.repartitionCotes[0] && current.coup3.repartitionCotes[0].win === 'false'" @change="setSelectionWin(0, 'false')">
+                                            <label class="form-check-label" for="coupRembourserWinNo">
+                                                <strong>Non</strong>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-for="(cote, idx) in current.coup3.repartitionCotes.slice(1)" :key="'result'+idx" class="mb-3">
+                                    <strong>Coup à gagner {{ idx + 1 }} : Gagnée ?</strong>
+                                    <div class="mt-2">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" :name="'coupGagner' + idx + 'Win'" :id="'coupGagner' + idx + 'WinYes'" :checked="cote && cote.win === 'true'" @change="setSelectionWin(idx + 1, 'true')">
+                                            <label class="form-check-label" :for="'coupGagner' + idx + 'WinYes'">
+                                                <strong>Oui</strong>
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" :name="'coupGagner' + idx + 'Win'" :id="'coupGagner' + idx + 'WinNo'" :checked="cote && cote.win === 'false'" @change="setSelectionWin(idx + 1, 'false')">
+                                            <label class="form-check-label" :for="'coupGagner' + idx + 'WinNo'">
+                                                <strong>Non</strong>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                                     </div>
                                 </div>
                             </div>
@@ -486,26 +512,6 @@
                             <!-- Résultat automatique de la répartition -->
                             <div v-if="allSelectionsAnswered && current.coup3.partsCount >= 2" class="mb-4">
                                 <h6><i class="fas fa-chart-line"></i> Résultat du Coup 3</h6>
-                                
-                                <!-- Résumé de la configuration -->
-                                <div class="alert alert-info mb-3">
-                                    <h6><i class="fas fa-info-circle"></i> Récapitulatif</h6>
-                                    <div class="row">
-                                        <div class="col-12 col-lg-4">
-                                            <p><strong>Mise totale :</strong> {{ formatMoney(current.coup3.mise) }} €</p>
-                                        </div>
-                                        <div class="col-12 col-lg-4">
-                                            <p><strong>Mise coup à rembourser :</strong> {{ formatMoney(calcMiseRembourser()) }} € @ {{ current.coup3.repartitionCotes[0].cote }}</p>
-                                        </div>
-                                        <div class="col-12 col-lg-4">
-                                            <p><strong>Total mises coups à gagner :</strong> {{ formatMoney(calcResteAGagner()) }} €
-                                            <br>
-                                            <span v-for="(cote, idx) in current.coup3.repartitionCotes.slice(1)" :key="'cote-' + idx">
-                                                @{{ cote.cote }}<span v-if="idx < current.coup3.repartitionCotes.slice(1).length - 1">, </span>
-                                            </span></p>
-                                        </div>
-                                    </div>
-                                </div>
                                 
                                 <!-- Détail des gains -->
                                 <div class="card mb-3">
@@ -614,6 +620,60 @@
     </div>
 
 
+    <!-- Historique des sessions -->
+    <div v-if="sessions.length" class="card shadow mb-4">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-history"></i> Historique des sessions</h5>
+            <button @click="toggleHistorique" class="btn btn-sm btn-outline-light">
+                <i class="fas" :class="showHistorique ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+            </button>
+        </div>
+        <div class="card-body" v-show="showHistorique">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th><i class="fas fa-list-ol"></i> Session</th>
+                            <th><i class="fas fa-calendar"></i> Date</th>
+                            <th><i class="fas fa-coins"></i> Mise de base</th>
+                            <th><i class="fas fa-hashtag"></i> Tentatives</th>
+                            <th><i class="fas fa-chart-line"></i> Résultat</th>
+                            <th><i class="fas fa-cog"></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(session, idx) in sessions" :key="idx">
+                            <td><strong>{{ session.name }}</strong></td>
+                            <td>{{ new Date(session.date).toLocaleString() }}</td>
+                            <td>{{ formatMoney(session.miseBase) }} €</td>
+                            <td>{{ session.nbTentatives }}</td>
+                            <td :class="session.totalCumul >= 0 ? 'text-success' : 'text-danger'">
+                                <strong>{{ session.totalCumul >= 0 ? '+' : '' }}{{ formatMoney(session.totalCumul) }} €</strong>
+                            </td>
+                            <td>
+                                <button @click="viewSessionDetails(session)" class="btn btn-sm btn-info me-2" title="Voir les détails">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button @click="deleteSession(idx)" class="btn btn-sm btn-danger" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-primary">
+                            <td colspan="4"><strong>Total général</strong></td>
+                            <td :class="getGrandTotal() >= 0 ? 'text-success' : 'text-danger'">
+                                <strong>{{ getGrandTotal() >= 0 ? '+' : '' }}{{ formatMoney(getGrandTotal()) }} €</strong>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <div v-if="showStorageWarning" class="alert alert-warning">
         <h6><i class="fas fa-exclamation-triangle"></i> Avertissement :</h6>
         <p class="mb-0">La sauvegarde locale n'est pas disponible. Utilisez le navigateur en mode normal ou actualisez la page si vous rencontrez des problèmes.</p>
@@ -634,7 +694,8 @@ createApp({
       currentIndex: 0,
       showStorageWarning: false,
       sessions: [],
-      showHistorique: false
+      showHistorique: true,
+      sessionCount: 0
     }
   },
   computed: {
@@ -655,6 +716,9 @@ createApp({
       return this.current.coup3.repartitionCotes.every(cote =>
         cote.cote && cote.cote > 0 && cote.win !== ''
       );
+    },
+    allAttemptsFinished() {
+      return this.attempts.length > 0 && this.attempts.every(a => a && a.finished);
     },
     // Vérifie si toutes les côtes sont entrées (pour afficher le profit garanti)
     allCotesEntered() {
@@ -683,6 +747,27 @@ createApp({
       this.currentIndex = 0;
       this.saveToStorage();
     },
+    saveSession(){
+       const sessionName = 'Nofy' + (this.sessions.length + 1);
+       const sessionData = {
+         name: sessionName,
+         attempts: JSON.parse(JSON.stringify(this.attempts)), // deep copy
+         totalCumul: this.totalCumul,
+         date: new Date().toISOString(),
+         nbTentatives: this.settings.nbTentatives,
+         miseBase: this.settings.miseBase
+       };
+       this.sessions.push(sessionData);
+       this.saveSessionsToStorage();
+     },
+     saveSessionAndRestart(){
+       this.saveSession();
+       // Reset attempts
+       this.attempts = [];
+       this.currentIndex = 0;
+       this.saveToStorage();
+       alert('Session sauvegardée ! Nouvelle session démarrée.');
+     },
     createEmptyAttempt(){
       const base = Number(this.settings.miseBase) || 0;
       return {
@@ -1034,14 +1119,33 @@ createApp({
     },
     saveToStorage(){
       try {
+        // Vérifier si localStorage est disponible
+        if (typeof(Storage) === 'undefined' || !localStorage) {
+          console.warn('localStorage n\'est pas disponible dans ce navigateur.');
+          this.showStorageWarning = true;
+          return;
+        }
+        
+        // Tester l'accès au localStorage
+        const testKey = '__test_storage__';
+        try {
+          localStorage.setItem(testKey, 'test');
+          localStorage.removeItem(testKey);
+        } catch (e) {
+          console.warn('Impossible d\'accéder au localStorage:', e);
+          this.showStorageWarning = true;
+          return;
+        }
+        
+        // Sauvegarder les données
         localStorage.setItem('sim_tentatives', JSON.stringify({
           settings:this.settings,
           attempts:this.attempts,
           index:this.currentIndex
         }));
+        this.showStorageWarning = false;
       } catch(e) {
-        console.warn('Sauvegarde locale non disponible:', e);
-        // Fallback vers une solution alternative si localStorage n'est pas disponible
+        console.warn('Erreur lors de la sauvegarde locale:', e);
         this.showStorageWarning = true;
       }
     },
@@ -1068,6 +1172,22 @@ createApp({
      },
     saveSessionsToStorage(){
       try {
+        // Vérifier si localStorage est disponible
+        if (typeof(Storage) === 'undefined' || !localStorage) {
+          console.warn('localStorage n\'est pas disponible dans ce navigateur.');
+          return;
+        }
+        
+        // Tester l'accès au localStorage
+        const testKey = '__test_storage__';
+        try {
+          localStorage.setItem(testKey, 'test');
+          localStorage.removeItem(testKey);
+        } catch (e) {
+          console.warn('Impossible d\'accéder au localStorage:', e);
+          return;
+        }
+        
         localStorage.setItem('sim_sessions', JSON.stringify(this.sessions));
       } catch(e) {
         console.warn('Sauvegarde sessions non disponible:', e);
@@ -1075,6 +1195,24 @@ createApp({
     },
     loadFromStorage(){
       try {
+        // Vérifier si localStorage est disponible
+        if (typeof(Storage) === 'undefined' || !localStorage) {
+          console.warn('localStorage n\'est pas disponible dans ce navigateur.');
+          this.showStorageWarning = true;
+          return;
+        }
+        
+        // Tester l'accès au localStorage
+        const testKey = '__test_storage__';
+        try {
+          localStorage.setItem(testKey, 'test');
+          localStorage.removeItem(testKey);
+        } catch (e) {
+          console.warn('Impossible d\'accéder au localStorage:', e);
+          this.showStorageWarning = true;
+          return;
+        }
+        
         const raw = localStorage.getItem('sim_tentatives');
         if(raw){
           const obj = JSON.parse(raw);
@@ -1115,9 +1253,10 @@ createApp({
         if(sessionsRaw){
           this.sessions = JSON.parse(sessionsRaw);
         }
+        this.showStorageWarning = false;
       } catch(e) {
         console.warn('Erreur lors du chargement:', e);
-        // Ne pas afficher d'erreur à l'utilisateur pour une meilleure expérience
+        this.showStorageWarning = true;
         this.attempts = [];
         this.currentIndex = 0;
         this.sessions = [];
