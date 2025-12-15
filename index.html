@@ -322,7 +322,7 @@
                             <!-- Résultat du Coup 3 simple -->
                             <div v-if="current.coup3.set && !current.coup3.repartition" :class="current.coup3.gain > 0 ? 'resultat-coup-gain' : 'resultat-coup-perte'">
                                 <i :class="current.coup3.gain > 0 ? '' : ''"></i>
-                                {{ current.coup3.gain > 0 ? 'Résultat final de la tentative : Bénéfice  +' + formatMoney(current.coup3.gain) + ' €' : 'Ni gain ni perte: 0 €' }}
+                                {{ current.coup3.gain > 0 ? 'Résultat de la tentative :' + '<br>' + 'Bénéfice  +' + formatMoney(current.coup3.gain) + ' €' : 'Ni gain ni perte: 0 €' }}
                                 <div class="mt-3">
                                    <h1><i class="fas fa-arrow-right"></i> Fin de partie</h1>
                                 </div>
