@@ -540,6 +540,9 @@
                                         <button @click="finishWithRemboursementGain" class="btn btn-secondary btn-lg">
                                             <i class="fas fa-stop me-2"></i> Non, terminer (gain: +{{ formatMoney(calcGainCoupRembourser()) }} €)
                                         </button>
+                                        <button v-if="!isLastAttempt" @click="nextAttempt" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-arrow-right me-2"></i> Tentative suivante
+                                        </button>
                                     </div>
                                 </div>
                                 
@@ -557,6 +560,9 @@
             
                                     <!-- Bouton Tentative suivante bien visible -->
                                     <div class="text-center mt-4">
+                                        <button v-if="!isLastAttempt" @click="nextAttempt" class="btn btn-primary">
+                                            <i class="fas fa-arrow-right me-2"></i> Tentative suivante
+                                        </button>
                                         <button @click="finishCoup3WithRepartitionNew" class="btn btn-primary">
                                             <i class="fas fa-arrow-right me-2"></i> Fin de partie
                                         </button>
@@ -1719,3 +1725,4 @@ createApp({
 </script>
 </body>
 </html>
+
